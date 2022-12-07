@@ -228,6 +228,7 @@ let s:completer_ref = {
       \   '\v\\v?%(auto|eq|[cC]?%(page)?|labelc)?ref%(\s*\{[^}]*|range\s*\{[^,{}]*%(\}\{)?)$',
       \   '\\hyperref\s*\[[^]]*$',
       \   '\\subref\*\?{[^}]*$',
+      \   '\\nameref{[^}]*$',
       \ ],
       \ 're_context' : '\\\w*{[^}]*$',
       \ 'initialized' : 0,
@@ -639,7 +640,10 @@ endfunction
 " {{{1 Documentclasses (\documentclass)
 
 let s:completer_doc = {
-      \ 'patterns' : ['\v\\documentclass%(\s*\[[^]]*\])?\s*\{[^}]*$'],
+      \ 'patterns' : [
+      \   '\v\\documentclass%(\s*\[[^]]*\])?\s*\{[^}]*$',
+      \   '\v\\PassOptionsToClass\s*\{[^}]*\}\s*\{[^}]*$',
+      \ ],
       \ 'candidates' : [],
       \}
 
@@ -953,4 +957,4 @@ let s:completers = map(
       \ filter(items(s:), 'v:val[0] =~# ''^completer_'''),
       \ 'v:val[1]')
 
-let s:complete_dir = fnamemodify(expand('<sfile>'), ':r') . '/'
+let s:complete_dir = expand('<sfile>:r') . '/'

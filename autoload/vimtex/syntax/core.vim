@@ -539,24 +539,24 @@ function! vimtex#syntax#core#init() abort " {{{1
 
   " Math regions: Inline Math Zones
   let l:conceal = g:vimtex_syntax_conceal.math_bounds ? 'concealends' : ''
-  execute 'syntax region texMathZone matchgroup=texMathDelimZone'
+  execute 'syntax region texMathZoneLI matchgroup=texMathDelimZoneLI'
           \ 'start="\%(\\\@<!\)\@<=\\("'
           \ 'end="\%(\\\@<!\)\@<=\\)"'
           \ 'contains=@texClusterMath'
           \ l:conceal
-  execute 'syntax region texMathZone matchgroup=texMathDelimZone'
+  execute 'syntax region texMathZoneLD matchgroup=texMathDelimZoneLD'
           \ 'start="\\\["'
           \ 'end="\\]"'
           \ 'contains=@texClusterMath'
           \ l:conceal
-  execute 'syntax region texMathZoneX matchgroup=texMathDelimZone'
+  execute 'syntax region texMathZoneTI matchgroup=texMathDelimZoneTI'
           \ 'start="\$"'
           \ 'skip="\\\\\|\\\$"'
           \ 'end="\$"'
           \ 'contains=@texClusterMath'
           \ 'nextgroup=texMathTextAfter'
           \ l:conceal
-  execute 'syntax region texMathZoneXX matchgroup=texMathDelimZone'
+  execute 'syntax region texMathZoneTD matchgroup=texMathDelimZoneTD'
           \ 'start="\$\$"'
           \ 'end="\$\$"'
           \ 'contains=@texClusterMath keepend'
@@ -642,6 +642,11 @@ function! vimtex#syntax#core#init() abort " {{{1
       call s:match_conceal_fancy()
     endif
 
+    " Conceal spacing commands
+    if g:vimtex_syntax_conceal.spacing
+      call s:match_conceal_spacing()
+    endif
+
     " Conceal replace greek letters
     if g:vimtex_syntax_conceal.greek
       call s:match_conceal_greek()
@@ -703,13 +708,16 @@ function! vimtex#syntax#core#init_highlights() abort " {{{1
   highlight def link texArg              Include
   highlight def link texCmd              Statement
   highlight def link texCmdSpaceCodeChar Special
-  highlight def link texCmdTodo          Todo
+  highlight def link texCmdTodo          VimtexTodo
+  highlight def link texCmdWarning       VimtexWarning
+  highlight def link texCmdError         VimtexError
+  highlight def link texCmdFatal         VimtexFatal
   highlight def link texCmdType          Type
   highlight def link texComment          Comment
   highlight def link texCommentTodo      Todo
   highlight def link texDelim            Delimiter
   highlight def link texEnvArgName       PreCondit
-  highlight def link texError            Error
+  highlight def link texError            VimtexError
   highlight def link texLength           Number
   highlight def link texMathDelim        Type
   highlight def link texMathEnvArgName   Delimiter
@@ -816,14 +824,20 @@ function! vimtex#syntax#core#init_highlights() abort " {{{1
   highlight def link texMathCmdText        texCmd
   highlight def link texMathDelimMod       texMathDelim
   highlight def link texMathDelimZone      texDelim
+  highlight def link texMathDelimZoneLI    texMathDelimZone
+  highlight def link texMathDelimZoneLD    texMathDelimZone
+  highlight def link texMathDelimZoneTI    texMathDelimZone
+  highlight def link texMathDelimZoneTD    texMathDelimZone
   highlight def link texMathError          texError
   highlight def link texMathErrorDelim     texError
   highlight def link texMathGroup          texMathZone
+  highlight def link texMathZoneLI         texMathZone
+  highlight def link texMathZoneLD         texMathZone
+  highlight def link texMathZoneTI         texMathZone
+  highlight def link texMathZoneTD         texMathZone
   highlight def link texMathZoneEnsured    texMathZone
   highlight def link texMathZoneEnv        texMathZone
   highlight def link texMathZoneEnvStarred texMathZone
-  highlight def link texMathZoneX          texMathZone
-  highlight def link texMathZoneXX         texMathZone
   highlight def link texMathStyleConcArg   texMathZone
   highlight def link texMathSub            texMathZone
   highlight def link texMathSuper          texMathZone
@@ -1201,7 +1215,7 @@ endfunction
 let s:re_sub =
       \ '[-+=()0-9aehijklmnoprstuvx]\|\\\%('
       \ . join([
-      \     'beta', 'delta', 'phi', 'gamma', 'chi'
+      \     'beta', 'rho', 'phi', 'gamma', 'chi'
       \ ], '\|') . '\)\>'
 let s:re_super = '[-+=()<>:;0-9a-pr-zABDEG-PRTUVW]'
 
@@ -1316,7 +1330,6 @@ function! s:match_math_symbols() abort " {{{1
   " Many of these symbols were contributed by Björn Winckler
   if !g:vimtex_syntax_conceal.math_symbols | return | endif
 
-  syntax match texMathSymbol '\\[,:;!]'              contained conceal
   syntax match texMathSymbol '\\|'                   contained conceal cchar=‖
   syntax match texMathSymbol '\\sqrt\[3]'            contained conceal cchar=∛
   syntax match texMathSymbol '\\sqrt\[4]'            contained conceal cchar=∜
@@ -1447,8 +1460,6 @@ let s:cmd_symbols = [
       \ ['propto', '∝'],
       \ ['rceil', '⌉'],
       \ ['Re', 'ℜ'],
-      \ ['quad', ' '],
-      \ ['qquad', ' '],
       \ ['rightarrow', '→'],
       \ ['Rightarrow', '⇒'],
       \ ['leftarrow', '←'],
@@ -1949,6 +1960,37 @@ function! s:match_conceal_fancy() abort " {{{1
   syntax match texCmd         '\\ldots\>' conceal cchar=…
   syntax match texCmdItem     '\\item\>'  conceal cchar=○
   syntax match texTabularChar '\\\\'      conceal cchar=⏎
+endfunction
+
+" }}}1
+function! s:match_conceal_spacing() abort " {{{1
+  syntax match texSpecialChar "\\[,;:!]"       conceal
+  syntax match texCmd         '\\bigskip\>'    conceal
+  syntax match texCmd         '\\hfill\>'      conceal
+  syntax match texCmd         '\\medspace\>'   conceal
+  syntax match texCmd         '\\qquad\>'      conceal
+  syntax match texCmd         '\\quad\>'       conceal
+  syntax match texCmd         '\\thickspace\>' conceal
+  syntax match texCmd         '\\thinspace\>'  conceal
+  syntax match texCmd         '\\vfill\>'      conceal
+  syntax match texCmd         "\\[hv]space\>"  conceal
+        \ skipwhite nextgroup=texConcealedArg
+
+  syntax match texMathCmd '\\[,:;!]'       contained conceal
+  syntax match texMathCmd '\\bigskip\>'    contained conceal
+  syntax match texMathCmd '\\hfill\>'      contained conceal
+  syntax match texMathCmd '\\medspace\>'   contained conceal
+  syntax match texMathCmd '\\qquad\>'      contained conceal
+  syntax match texMathCmd '\\quad\>'       contained conceal
+  syntax match texMathCmd '\\thickspace\>' contained conceal
+  syntax match texMathCmd '\\thinspace\>'  contained conceal
+  syntax match texMathCmd '\\vfill\>'      contained conceal
+  syntax match texMathCmd "\\[hv]space\>"  contained conceal
+        \ skipwhite nextgroup=texConcealedArg
+
+  call vimtex#syntax#core#new_arg('texConcealedArg', {
+        \ 'opts': 'keepend contained conceal concealends',
+        \})
 endfunction
 
 " }}}1

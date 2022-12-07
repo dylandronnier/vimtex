@@ -66,6 +66,7 @@ function! vimtex#options#init() abort " {{{1
   call s:init_option('vimtex_include_search_enabled', 1)
 
   call s:init_option('vimtex_doc_enabled', 1)
+  call s:init_option('vimtex_doc_confirm_single', v:true)
   call s:init_option('vimtex_doc_handlers', [])
 
   call s:init_option('vimtex_echo_verbose_input', 1)
@@ -321,6 +322,7 @@ function! vimtex#options#init() abort " {{{1
         \ 'ligatures': 1,
         \ 'cites': 1,
         \ 'fancy': 1,
+        \ 'spacing': 1,
         \ 'greek': 1,
         \ 'math_bounds': 1,
         \ 'math_delimiters': 1,
@@ -369,6 +371,7 @@ function! vimtex#options#init() abort " {{{1
         \ 'amsmath': {'load': 2},
         \ 'babel': {'conceal': 1},
         \ 'hyperref': {'conceal': 1},
+        \ 'fontawesome5': {'conceal': 1},
         \})
 
   " Disable conceals if chosen
@@ -376,6 +379,7 @@ function! vimtex#options#init() abort " {{{1
     call map(g:vimtex_syntax_conceal, {k, v -> 0})
     let g:vimtex_syntax_packages.babel.conceal = 0
     let g:vimtex_syntax_packages.hyperref.conceal = 0
+    let g:vimtex_syntax_packages.fontawesome5.conceal = 0
   endif
 
   call s:init_option('vimtex_texcount_custom_arg', '')
@@ -422,6 +426,12 @@ function! vimtex#options#init() abort " {{{1
   call s:init_option('vimtex_toc_todo_labels', {
         \ 'TODO': 'TODO: ',
         \ 'FIXME': 'FIXME: '
+        \})
+
+  call s:init_option('vimtex_toggle_fractions', {
+        \ 'INLINE': 'frac',
+        \ 'frac': 'INLINE',
+        \ 'dfrac': 'INLINE',
         \})
 
   call s:init_option('vimtex_view_enabled', 1)
@@ -481,6 +491,7 @@ function! s:check_for_deprecated_options() abort " {{{1
         \ 'g:vimtex_change_set_formatexpr',
         \ 'g:vimtex_change_toggled_delims',
         \ 'g:vimtex_compiler_callback_hooks',
+        \ 'g:vimtex_disable_recursive_main_file_detection',
         \ 'g:vimtex_env_complete_list',
         \ 'g:vimtex_fold_commands',
         \ 'g:vimtex_fold_commands_default',
@@ -568,11 +579,18 @@ function! s:init_highlights() abort " {{{1
         \ ['VimtexInfoOther', ''],
         \ ['VimtexMsg', 'ModeMsg'],
         \ ['VimtexSuccess', 'Statement'],
+        \ ['VimtexTodo', 'Todo'],
+        \ ['VimtexWarning', 'WarningMsg'],
+        \ ['VimtexError', 'Error'],
+        \ ['VimtexFatal', 'ErrorMsg'],
         \ ['VimtexTocHelp', 'helpVim'],
         \ ['VimtexTocHelpKey', 'ModeMsg'],
         \ ['VimtexTocHelpLayerOn', 'Statement'],
         \ ['VimtexTocHelpLayerOff', 'Comment'],
-        \ ['VimtexTocTodo', 'Todo'],
+        \ ['VimtexTocTodo', 'VimtexTodo'],
+        \ ['VimtexTocWarning', 'VimtexWarning'],
+        \ ['VimtexTocError', 'VimtexError'],
+        \ ['VimtexTocFatal', 'VimtexFatal'],
         \ ['VimtexTocNum', 'Number'],
         \ ['VimtexTocSec0', 'Title'],
         \ ['VimtexTocSec1', ''],
@@ -586,8 +604,6 @@ function! s:init_highlights() abort " {{{1
         \ ['VimtexTocLabelsTab', 'String'],
         \ ['VimtexTocIncl', 'Number'],
         \ ['VimtexTocInclPath', ''],
-        \ ['VimtexWarning', 'WarningMsg'],
-        \ ['VimtexError', 'ErrorMsg'],
         \]
     if !hlexists(l:name) && !empty(l:target)
       silent execute 'highlight default link' l:name l:target
