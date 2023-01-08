@@ -252,12 +252,12 @@ Compiler backend~
 
     `latexmk`: http://users.phys.psu.edu/~collins/software/latexmk-jcc
     "a perl script for running LaTeX the correct number of times to resolve
-  cross references, etc; it also runs auxiliary programs (bibtex, makeindex if
-  necessary, and dvips and/or a previewer as requested).  It has a number of
-  other useful capabilities, for example to start a previewer and then run
-  latex whenever the source files are updated, so that the previewer gives an
-  up-to-date view of the document. The script runs on both UNIX and MS-WINDOWS
-  (XP, etc)." [Copied from the latexmk page.]  (|vimtex-compiler-latexmk|)
+  cross references, etc; it also runs auxiliary programs (e.g. bibtex).  It
+  has a number of other useful capabilities, for example to start a previewer
+  and then run latex whenever the source files are updated, so that the
+  previewer gives an up-to-date view of the document. The script runs on both
+  UNIX and MS-WINDOWS (XP, etc)." [Copied from the latexmk page.]
+  (|vimtex-compiler-latexmk|)
 
     `latexrun`: https://github.com/aclements/latexrun
     Similar to `latexmk` in that it runs the desired LaTeX engine an
@@ -801,10 +801,13 @@ VimTeX is designed to be controlled by a selection of mappings.  Note,
 though, that most of the mappings are also available as commands, see
 |vimtex-commands|.
 
-Many of the mappings utilize the |maplocalleader|. The right-hand sides are
-provided as <plug>-mappings, see |using-<plug>|. For any given <plug> map, the
-default mapping will only be created if it does not already exist. This means
-that if a user defines a custom mapping, e.g. with >
+Many of the mappings use `<localleader>l` as a common prefix, where the
+default |<localleader>| is `\`. Thus, `<localleader>ll` will for most people
+mean `\ll`. The prefix may be changed with |g:vimtex_mappings_prefix|.
+
+The right-hand sides are provided as <plug>-mappings, see |using-<plug>|. For
+any given <plug> map, the default mapping will only be created if it does not
+already exist. This means that if a user defines a custom mapping, e.g. with >
 
   nmap <space>li <plug>(vimtex-info)
 
@@ -1308,6 +1311,12 @@ OPTIONS                                                        *vimtex-options*
     |complete-items|). If the key is set to an empty string, then the `menu`
     entry is not added to the completion candidates. See the description of
     `match_str_fmt` for the allowed keys.
+
+  info_fmt~
+    Default value: `"TITLE: @title\nAUTHOR: @author_all\nYEAR: @year"`
+    The format used for the `info` entry for bib completion candidates (see
+    |complete-items|). See the description of `match_str_fmt` for the allowed
+    keys.
 
   abbr_fmt~
     Default value: `''`
@@ -2105,6 +2114,11 @@ OPTIONS                                                        *vimtex-options*
   mappings on conflict.
 
   Default value: 0
+
+*g:vimtex_mappings_prefix*
+  The default prefix for `<localleader>` based mappings.
+
+  Default value: `'<localleader>l'`
 
 *g:vimtex_matchparen_enabled*
   Enable highlighting of matching delimiters.
@@ -4891,12 +4905,11 @@ LATEXMK                                               *vimtex-compiler-latexmk*
 
                       http://users.phys.psu.edu/~collins/software/latexmk-jcc
 > latexmk is a perl script for running LaTeX the correct number of times to
-> resolve cross references, etc; it also runs auxiliary programs (bibtex,
-> makeindex if necessary, and dvips and/or a previewer as requested).  It has
-> a number of other useful capabilities, for example to start a previewer and
-> then run latex whenever the source files are updated, so that the previewer
-> gives an up-to-date view of the document. The script runs on both UNIX and
-> MS-WINDOWS (XP, etc).
+> resolve cross references, etc; it also runs auxiliary programs (e.g.
+> bibtex). It has a number of other useful capabilities, for example to start
+> a previewer and then run latex whenever the source files are updated, so
+> that the previewer gives an up-to-date view of the document. The script runs
+> on both UNIX and MS-WINDOWS (XP, etc).
 
 `latexmk` is a compiler backend that handles recompilation of LaTeX documents
 when source files have been changed.  VimTeX uses the continuous mode by
@@ -5992,7 +6005,11 @@ A: SumatraPDF expects all path arguments to be in the regular Windows format,
 ------------------------------------------------------------------------------
                                                      *vimtex-faq-zathura-macos*
 Q: Does Zathura + VimTeX work on macOS?
-A: Yes, it should work.  The following recipe has been reported to work [0].
+A: Yes, it should work.  The following recipe has been reported to work [0],
+   although users with Apple Silicon CPUs have reported difficulties starting
+   `dbus`. These users may want to try the more involved recipe given in [3]
+   if the below procedure fails.
+
    The steps assume the user has installed and knows how to use Homebrew [1].
 
    1. Zathura needs `dbus` to work properly. Install it with the following:
@@ -6009,7 +6026,9 @@ A: Yes, it should work.  The following recipe has been reported to work [0].
       `/usr/local/opt/dbus/share/dbus-1/session.conf` from `EXTERNAL` to
       `DBUS_COOKIE_SHA1`.
 
-   4. Run `brew services start dbus`
+   4. Run `brew services start dbus`, and use `brew services info dbus` to
+      double-check that `dbus` is running. Apple Silicon users that encounter
+      problems at this step should try the recipe in [3].
 
    5. Now install Zathura (most recent version, aka HEAD): >
 
@@ -6029,6 +6048,7 @@ A: Yes, it should work.  The following recipe has been reported to work [0].
    [0]: https://github.com/lervag/vimtex/issues/1737#issuecomment-759953886
    [1]: https://brew.sh
    [2]: https://github.com/lervag/vimtex/issues/2391#issuecomment-1127678531
+   [3]: https://github.com/zegervdv/homebrew-zathura/issues/99
 
 ------------------------------------------------------------------------------
                                                         *vimtex-faq-treesitter*
